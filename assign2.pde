@@ -1,6 +1,6 @@
 /*
 writer: wei-yun kan
-date: 8 april 2020
+edit date: 21 april 2020
 name: assign 2
 
 */
@@ -28,18 +28,24 @@ final int LIFE_GAP = 20;
 final int HOG_WIDTH = 80;
 
 int soldierX, soldierY, soldierSpeed;
-int hogIdleX = GRID*4;
-int hogIdleY = 80;
+float hogIdleX = GRID*4;
+float hogIdleY = 80;
 int lifeOneX = 10;
 int lifeOneY = 10;
 int lifeTwoX = lifeOneX + LIFE_WIDTH + LIFE_GAP;
 int lifeThreeX;
 int cabbageX, cabbageY;
 
+// hog's move
+int MoveTime = 250;
+int actionFrame = 0;
+float lastTime;
+float hogLestY, hogLestX;
+
 boolean downPressed = false;
 boolean leftPressed = false;
 boolean rightPressed = false;
-boolean noPressed = true;
+// boolean noPressed = true;
 
 void setup() {
 	size(640, 480, P2D);
@@ -69,6 +75,10 @@ void setup() {
   
   // first only have 2 lifes, so let Life3 out 
   lifeThreeX = width;
+  
+  frameRate(60);
+  gameState = GAME_START;
+  lastTime = millis();
 }
 
 void draw() {
@@ -108,26 +118,61 @@ void draw() {
     image(life, lifeThreeX, lifeOneY);
     
     // decide hog's direction
-    if (downPressed == true){
-      leftPressed = false;
-      rightPressed = false;
-      noPressed = false;
-      image(hogDown, hogIdleX, hogIdleY);
-    } 
-    if (leftPressed == true){
-      downPressed = false;
-      rightPressed = false;
-      noPressed = false;
-      image(hogLeft, hogIdleX, hogIdleY);
-    } 
-    if (rightPressed == true){
-      downPressed = false;
-      leftPressed = false;
-      noPressed = false;
-      image(hogRight, hogIdleX, hogIdleY);
+    if (downPressed == false && leftPressed == false && rightPressed == false) {
+      image(hogIdle, hogIdleX, hogIdleY);
     }
-    if (noPressed == true){
-    image(hogIdle, hogIdleX, hogIdleY);
+    if (downPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleY += GRID/15.0;
+        image(hogDown, hogIdleX, hogIdleY);
+        if (hogIdleY >= GRID*5){
+          hogIdleY = GRID*5;
+        } 
+      } else{
+        hogIdleY = hogLestY + GRID;
+        downPressed = false;
+      }
+    } 
+    if (leftPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleX -= GRID/15.0;
+        image(hogLeft, hogIdleX, hogIdleY);
+        if (hogIdleX < GRID){
+          hogIdleX = 0;
+        } 
+      } else{
+        hogIdleX = hogLestX - GRID;
+        leftPressed = false;
+      }
+    } 
+    if (rightPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleX += GRID/15.0;
+        image(hogRight, hogIdleX, hogIdleY);
+        if (hogIdleX > GRID*7){
+          hogIdleX = GRID*7;
+        } 
+      } else{
+        hogIdleX = hogLestX + GRID;
+        rightPressed = false;
+      }
+    }
+    
+    //groundhog: boundary detection
+    if (hogIdleX >= width - GRID) {
+      hogIdleX = width - GRID;
+    }
+    if (hogIdleX <= 0) {
+      hogIdleX = 0;
+    }
+    if (hogIdleY >= height - GRID) {
+      hogIdleY = height - GRID;
+    }
+    if (hogIdleY <= 0) {
+      hogIdleY = 0;
     }
     
     // how many life ( life's x position should on "width" when the hog don't have it )
@@ -197,51 +242,33 @@ void draw() {
 }
 
 void keyPressed(){
+  float newTime = millis();
   if (key == CODED) {
     switch (keyCode) {
       case DOWN:
-        downPressed = true;
-        noPressed = false;
-        hogIdleY += GRID;
-        if (hogIdleY >= height){
-          hogIdleY = GRID*5;
+        if (newTime - lastTime > 250){
+          downPressed = true;
+          actionFrame = 0;
+          hogLestY = hogIdleY;
+          lastTime = newTime;
         }
         break;
       case LEFT:
-        leftPressed = true;
-        noPressed = false;
-        hogIdleX -= GRID;
-        if(hogIdleX <= 0){
-          hogIdleX = 0;
+        if (newTime - lastTime > 250){
+          leftPressed = true;
+          actionFrame = 0;
+          hogLestX = hogIdleX;
+          lastTime = newTime;
         }
         break;
       case RIGHT:
-        rightPressed = true;
-        noPressed = false;
-        hogIdleX += GRID;
-        if(hogIdleX >= width){
-          hogIdleX = GRID*7;
+        if (newTime - lastTime > 250){
+          rightPressed = true;
+          actionFrame = 0;
+          hogLestX = hogIdleX;
+          lastTime = newTime;
         }
-        break;
-    }
-  } 
-}
-////////
-void keyReleased(){
-    if (key == CODED) {
-    switch (keyCode) {
-      case DOWN:
-        downPressed = false;
-        noPressed = true;
-        break;
-      case LEFT:
-        leftPressed = false;
-        noPressed = true;
-        break;
-      case RIGHT:
-        rightPressed = false;
-        noPressed = true;
-        break;
+      break;
     }
   } 
 }
